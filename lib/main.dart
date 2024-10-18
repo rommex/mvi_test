@@ -73,10 +73,9 @@ class MyHomePage extends StatelessWidget {
 // Children Widgets and their states
 
 class BlueListState extends ChangeNotifier {
-  // final firstList = Data.topList;
-
   var index = 0;
 
+// The state has only one entry point for actions
   void triggerAction(BuildContext context, BlueListAction action) {
     if (action is RowTap) {
       index = action.index;
@@ -110,8 +109,12 @@ class YellowWidgetState extends ChangeNotifier {
   var secondaryList = Data.secondaryList[0];
 
   void setListNames(int index) {
-    secondaryList = Data.secondaryList[index];
+    secondaryList = prepareDisplayData(index);
     notifyListeners();
+  }
+
+  List<String> prepareDisplayData(int index) {
+    return Data.secondaryList[index];
   }
 }
 
@@ -129,6 +132,8 @@ ListView YellowList() {
     },
   );
 }
+
+//====Actions================================================
 
 abstract class BlueListAction {}
 
