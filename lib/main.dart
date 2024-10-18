@@ -1,12 +1,5 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'package:test_flutter_package/test_flutter_package.dart';
-
-void main() {
-  runApp(MyApp());
-}
 
 class Data {
   static const List<String> topList = [
@@ -18,8 +11,8 @@ class Data {
     'six',
   ];
 
-  static const List<List<String>> topListMap = [
-    ['one', 'two', 'three'],
+  static const List<List<String>> secondaryList = [
+    ['1one', '2two', '3three'],
     ['2four', '2five', '2six'],
     ['3one', '3two', '3three'],
     ['4four', '4five', '4six'],
@@ -28,57 +21,71 @@ class Data {
   ];
 }
 
+//=========================================================
+
+void main() {
+  runApp(MyApp());
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Namer App',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+    return MaterialApp(
+      title: 'Namer App',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+      ),
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // This widget is a parent for both BlueList and YellowListParent
+    // and is the proper place for the prividers of the two states.
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => YellowWidgetState()),
+        ChangeNotifierProvider(create: (context) => BlueListState()),
+      ],
+      child: Scaffold(
+        body: Row(
+          children: [
+            Expanded(
+              child: BlueList(),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: YellowList(),
+            ),
+          ],
         ),
-        home: MyHomePage(),
       ),
     );
   }
 }
 
-class MyAppState extends ChangeNotifier {
-  final firstList = Data.topList;
+// Children Widgets and their states
+
+class BlueListState extends ChangeNotifier {
+  // final firstList = Data.topList;
 
   var index = 0;
 
-  void receiveAction(BuildContext context, BlueListAction action) {
-    switch (action) {
-      case RowTap(index: var index):
-        context.read<YellowWidgetState>().setListNames(index);
+  void triggerAction(BuildContext context, BlueListAction action) {
+    if (action is RowTap) {
+      index = action.index;
+      // find the state of the YellowWidgetState via the context
+      final yellowState = context.read<YellowWidgetState>();
+
+      // modify the state of the YellowWidgetState
+      yellowState.setListNames(index);
     }
-  }
-}
-
-// ...
-
-class MyHomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // return Text("text");
-    return Scaffold(
-        body: Row(
-      children: [
-        Text("Hello"),
-        SizedBox(width: 10),
-        Expanded(
-          child: BlueList(),
-        ),
-        Expanded(
-          child: YellowListParent(),
-        )
-      ],
-    ));
   }
 }
 
@@ -90,25 +97,22 @@ ListView BlueList() {
         title: Text(Data.topList[index]),
         tileColor: Colors.blue,
         onTap: () {
-          context.read<MyAppState>().receiveAction(context, RowTap(index));
+          context.read<BlueListState>().triggerAction(context, RowTap(index));
         },
       );
     },
   );
 }
 
+//---
+
 class YellowWidgetState extends ChangeNotifier {
-  var secondaryList = Data.topListMap[0];
+  var secondaryList = Data.secondaryList[0];
 
   void setListNames(int index) {
-    secondaryList = Data.topListMap[index];
+    secondaryList = Data.secondaryList[index];
     notifyListeners();
   }
-}
-
-Widget YellowListParent() {
-  return ChangeNotifierProvider(
-      create: (context) => YellowWidgetState(), child: YellowList());
 }
 
 ListView YellowList() {
@@ -126,7 +130,7 @@ ListView YellowList() {
   );
 }
 
-sealed class BlueListAction {}
+abstract class BlueListAction {}
 
 class RowTap extends BlueListAction {
   final int index;
